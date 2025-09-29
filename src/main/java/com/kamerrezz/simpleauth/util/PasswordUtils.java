@@ -1,43 +1,58 @@
 package com.kamerrezz.simpleauth.util;
 
-import org.mindrot.jbcrypt.BCrypt;
-
+import java.security.MessageDigest;
 import java.security.SecureRandom;
+import java.util.Base64;
 
 public class PasswordUtils {
-    private static final int BCRYPT_ROUNDS = 12;
-    private static final SecureRandom random = new SecureRandom();
     
     public static String hashPassword(String password) {
-        return BCrypt.hashpw(password, BCrypt.gensalt(BCRYPT_ROUNDS));
+        try {
+            SecureRandom random = new SecureRandom();
+            byte[] salt = new byte[16];
+            random.nextBytes(salt);
+            
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            md.update(salt);
+            byte[] hashedPassword = md.digest(password.getBytes("UTF-8"));
+            
+            String saltString = Base64.getEncoder().encodeToString(salt);
+            String hashString = Base64.getEncoder().encodeToString(hashedPassword);
+            
+            return saltString + ":" + hashString;
+        } catch (Exception e) {
+            return null;
+        }
     }
     
-    public static boolean verifyPassword(String password, String hash) {
+    public static boolean verifyPassword(String password, String storedHash) {
         try {
-            return BCrypt.checkpw(password, hash);
+            String[] parts = storedHash.split(":");
+            if (parts.length != 2) {
+                return false;
+            }
+            
+            String saltString = parts[0];
+            String expectedHash = parts[1];
+            
+            byte[] salt = Base64.getDecoder().decode(saltString);
+            
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            md.update(salt);
+            byte[] hashedPassword = md.digest(password.getBytes("UTF-8"));
+            
+            String actualHash = Base64.getEncoder().encodeToString(hashedPassword);
+            
+            return actualHash.equals(expectedHash);
         } catch (Exception e) {
             return false;
         }
     }
     
     public static boolean isValidPassword(String password) {
-        if (password == null || password.length() < 4) {
-            return false;
-        }
-        if (password.length() > 32) {
-            return false;
-        }
-        return !password.contains(" ");
-    }
-    
-    public static String generateTemporaryPassword() {
-        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        StringBuilder password = new StringBuilder();
-        
-        for (int i = 0; i < 8; i++) {
-            password.append(chars.charAt(random.nextInt(chars.length())));
-        }
-        
-        return password.toString();
+        return password != null && 
+               password.length() >= 6 && 
+               password.length() <= 32 && 
+               !password.contains(" ");
     }
 }

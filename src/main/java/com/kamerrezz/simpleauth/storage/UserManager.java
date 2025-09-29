@@ -40,9 +40,13 @@ public class UserManager {
         }
         
         UUID internalUuid = UUID.randomUUID();
-        String passwordHash = PasswordUtils.hashPassword(password);
         
-        UserData userData = new UserData(playerName, internalUuid, passwordHash, ip);
+        String hashedPassword = PasswordUtils.hashPassword(password);
+        if (hashedPassword == null) {
+            return false;
+        }
+        
+        UserData userData = new UserData(playerName, internalUuid, hashedPassword, ip);
         users.put(playerName.toLowerCase(), userData);
         
         return saveUsers(users);

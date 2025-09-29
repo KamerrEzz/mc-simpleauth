@@ -114,10 +114,23 @@ public class LoginHandler {
         String command = event.getParseResults().getReader().getString().toLowerCase();
         
         if (!UserManager.isAuthenticated(playerName)) {
-            if (!command.startsWith("register") && !command.startsWith("login")) {
+            boolean isRegisterCommand = command.startsWith("/register") || command.startsWith("register");
+            boolean isLoginCommand = command.startsWith("/login") || command.startsWith("login");
+            
+            if (!isRegisterCommand && !isLoginCommand) {
                 event.setCanceled(true);
                 player.sendSystemMessage(Component.literal("§cSolo puedes usar /register o /login"));
             }
+        }
+    }
+    
+    @SubscribeEvent
+    public static void onServerChatEvent(ServerChatEvent event) {
+        String playerName = event.getPlayer().getName().getString();
+        
+        if (!UserManager.isAuthenticated(playerName)) {
+            event.setCanceled(true);
+            event.getPlayer().sendSystemMessage(Component.literal("Debes autenticarte antes de poder chatear."));
         }
     }
     

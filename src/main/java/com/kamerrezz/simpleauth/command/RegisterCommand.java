@@ -23,37 +23,36 @@ public class RegisterCommand {
     
     private static int execute(CommandContext<CommandSourceStack> context) {
         if (!(context.getSource().getEntity() instanceof ServerPlayer player)) {
-            context.getSource().sendFailure(Component.literal("§cSolo los jugadores pueden usar este comando"));
             return 0;
         }
-        
-        UUID playerId = player.getUUID();
+
         String playerName = player.getName().getString();
         String password = StringArgumentType.getString(context, "password");
-        
-        if (LoginHandler.isInCooldown(playerId)) {
-            player.sendSystemMessage(Component.literal("§cEstás en cooldown. Espera antes de intentar de nuevo"));
+
+        if (LoginHandler.isInCooldown(player.getUUID())) {
+            player.sendSystemMessage(Component.literal("§cEstás en cooldown. Espera antes de intentar de nuevo."));
             return 0;
         }
-        
+
         if (UserManager.isRegistered(playerName)) {
             player.sendSystemMessage(Component.literal("§cYa estás registrado. Usa /login <contraseña>"));
             return 0;
         }
-        
-        if (!PasswordUtils.isValidPassword(password)) {
-            player.sendSystemMessage(Component.literal("§cLa contraseña debe tener entre 4 y 32 caracteres sin espacios"));
+
+        if (password.length() < 6 || password.length() > 32) {
+            player.sendSystemMessage(Component.literal("§cLa contraseña debe tener entre 6 y 32 caracteres"));
             return 0;
         }
-        
-        String playerIP = player.getIpAddress();
-        if (UserManager.registerUser(playerName, password, playerIP)) {
-            UserManager.setAuthenticated(playerName, playerId);
-            LoginHandler.clearFailedAttempts(playerId);
-            player.sendSystemMessage(Component.literal("§aRegistro exitoso. Ya estás autenticado"));
+
+        boolean success = UserManager.registerUser(playerName, password, player.getIpAddress());
+        if (success) {
+            UserManager.setAuthenticated(playerName, player.getUUID());
+            player.sendSystemMessage(Component.literal("§aRegistro exitoso. Ya estás autenticado."));
+            LoginHandler.clearFailedAttempts(player.getUUID());
             return 1;
         } else {
-            player.sendSystemMessage(Component.literal("§cError al registrar. Inténtalo de nuevo"));
+            player.sendSystemMessage(Component.literal("§cError al registrar. Inténtalo de nuevo."));
+            LoginHandler.recordFailedAttempt(player.getUUID());
             return 0;
         }
     }
