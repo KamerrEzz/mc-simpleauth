@@ -72,39 +72,39 @@ jobs:
           # If still empty, provide default content
           if [ -z "$CHANGELOG_CONTENT" ]; then
             CHANGELOG_CONTENT="### ✨ Nuevas Características
-- Mejoras en el sistema de autenticación
-- Optimizaciones de rendimiento
+            - Mejoras en el sistema de autenticación
+            - Optimizaciones de rendimiento
 
-### 🐛 Correcciones
-- Corrección de bugs menores
+            ### 🐛 Correcciones
+            - Corrección de bugs menores
 
-### 📋 Información Técnica
-- **Minecraft**: 1.20.1
-- **Forge**: 47.4.9+
-- **Java**: 17+"
-          fi
-        else
-          # Fallback if CHANGELOG.md doesn't exist
-          CHANGELOG_CONTENT="### ✨ Nuevas Características
-- Mejoras en el sistema de autenticación
-- Optimizaciones de rendimiento
+            ### 📋 Información Técnica
+            - **Minecraft**: 1.20.1
+            - **Forge**: 47.4.9+
+            - **Java**: 17+"
+                      fi
+                    else
+                      # Fallback if CHANGELOG.md doesn't exist
+                      CHANGELOG_CONTENT="### ✨ Nuevas Características
+            - Mejoras en el sistema de autenticación
+            - Optimizaciones de rendimiento
 
-### 🐛 Correcciones
-- Corrección de bugs menores
+            ### 🐛 Correcciones
+            - Corrección de bugs menores
 
-### 📋 Información Técnica
-- **Minecraft**: 1.20.1
-- **Forge**: 47.4.9+
-- **Java**: 17+"
+            ### 📋 Información Técnica
+            - **Minecraft**: 1.20.1
+            - **Forge**: 47.4.9+
+            - **Java**: 17+"
 
-### 🐛 Correcciones
-- Corrección de bugs menores
+            ### 🐛 Correcciones
+            - Corrección de bugs menores
 
-### 📋 Información Técnica
-- **Minecraft**: 1.20.1
-- **Forge**: 47.4.9+
-- **Java**: 17+"
-        fi
+            ### 📋 Información Técnica
+            - **Minecraft**: 1.20.1
+            - **Forge**: 47.4.9+
+            - **Java**: 17+"
+                    fi
         
         # Output the changelog
         echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
