@@ -41,15 +41,15 @@ public class LoginHandler {
         
         if (!UserManager.isRegistered(playerName)) {
             player.sendSystemMessage(Component.literal("§cDebes registrarte con /register <contraseña>"));
-        } else if (!UserManager.isAuthenticated(playerId)) {
+        } else if (!UserManager.isAuthenticated(playerName)) {
             player.sendSystemMessage(Component.literal("§cDebes autenticarte con /login <contraseña>"));
         }
         
-        if (!UserManager.isAuthenticated(playerId)) {
+        if (!UserManager.isAuthenticated(playerName)) {
             loginAttempts.put(playerId, System.currentTimeMillis());
             
             scheduler.schedule(() -> {
-                if (!UserManager.isAuthenticated(playerId) && player.isAlive()) {
+                if (!UserManager.isAuthenticated(playerName) && player.isAlive()) {
                     player.connection.disconnect(Component.literal("§cTiempo de login agotado (60 segundos)"));
                 }
                 loginAttempts.remove(playerId);

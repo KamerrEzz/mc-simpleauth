@@ -48,7 +48,7 @@ public class RegisterCommand {
         
         String playerIP = player.getIpAddress();
         if (UserManager.registerUser(playerName, password, playerIP)) {
-            UserManager.setAuthenticated(playerId, true);
+            UserManager.setAuthenticated(playerName, playerId);
             LoginHandler.clearFailedAttempts(playerId);
             player.sendSystemMessage(Component.literal("§aRegistro exitoso. Ya estás autenticado"));
             return 1;

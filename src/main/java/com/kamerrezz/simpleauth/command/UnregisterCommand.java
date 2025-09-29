@@ -38,7 +38,7 @@ public class UnregisterCommand {
         }
         
         if (UserManager.deleteUser(targetPlayer)) {
-            deletePlayerData(userData.internalUuid);
+            deletePlayerData(userData.internalUuid.toString());
             context.getSource().sendSuccess(() -> Component.literal("§aJugador " + targetPlayer + " eliminado exitosamente"), true);
             return 1;
         } else {

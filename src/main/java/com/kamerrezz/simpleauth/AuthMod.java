@@ -23,7 +23,7 @@ public class AuthMod {
     }
     
     private void setup(final FMLCommonSetupEvent event) {
-        UserManager.initialize();
+        // UserManager se inicializa automáticamente con el bloque static
     }
     
     @SubscribeEvent

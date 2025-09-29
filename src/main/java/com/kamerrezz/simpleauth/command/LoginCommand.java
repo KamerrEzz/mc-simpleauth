@@ -40,14 +40,13 @@ public class LoginCommand {
             return 0;
         }
         
-        if (UserManager.isAuthenticated(playerId)) {
+        if (UserManager.isAuthenticated(playerName)) {
             player.sendSystemMessage(Component.literal("§cYa estás autenticado"));
             return 0;
         }
         
-        String playerIP = player.getIpAddress();
-        if (UserManager.verifyCredentials(playerName, password, playerIP)) {
-            UserManager.setAuthenticated(playerId, true);
+        if (UserManager.verifyCredentials(playerName, password)) {
+            UserManager.setAuthenticated(playerName, playerId);
             LoginHandler.clearFailedAttempts(playerId);
             player.sendSystemMessage(Component.literal("§aLogin exitoso. Bienvenido de vuelta"));
             return 1;
