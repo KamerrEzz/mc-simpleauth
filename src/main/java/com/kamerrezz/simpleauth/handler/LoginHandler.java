@@ -125,14 +125,30 @@ public class LoginHandler {
         }
     }
     
+
+    
     @SubscribeEvent(priority = EventPriority.HIGHEST)
-    public static void onPlayerInteract(PlayerInteractEvent event) {
+    public static void onPlayerRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         
         String playerName = player.getName().getString();
         if (!UserManager.isAuthenticated(playerName)) {
             event.setCanceled(true);
-            player.sendSystemMessage(Component.literal("§cDebes autenticarte antes de interactuar"));
+            // Solo mostrar mensaje si no hay ítem en la mano (evita duplicación con RightClickItem)
+            if (event.getItemStack().isEmpty()) {
+                player.sendSystemMessage(Component.literal("§cDebes autenticarte antes de colocar bloques"));
+            }
+        }
+    }
+    
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void onPlayerRightClickItem(PlayerInteractEvent.RightClickItem event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+        
+        String playerName = player.getName().getString();
+        if (!UserManager.isAuthenticated(playerName)) {
+            event.setCanceled(true);
+            player.sendSystemMessage(Component.literal("§cDebes autenticarte antes de usar items"));
         }
     }
     
