@@ -1,6 +1,6 @@
 package com.kamerrezz.simpleauth.handler;
 
-import com.kamerrezz.simpleauth.manager.UserManager;
+import com.kamerrezz.simpleauth.storage.UserManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -60,18 +60,19 @@ public class LoginHandler {
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void onPlayerLeave(PlayerEvent.PlayerLoggedOutEvent event) {
         UUID playerId = event.getEntity().getUUID();
+        String playerName = event.getEntity().getName().getString();
         loginAttempts.remove(playerId);
         failedAttempts.remove(playerId);
         cooldowns.remove(playerId);
-        UserManager.setAuthenticated(playerId, false);
+        UserManager.removeAuthenticated(playerName);
     }
     
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void onPlayerMove(LivingEvent.LivingTickEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         
-        UUID playerId = player.getUUID();
-        if (!UserManager.isAuthenticated(playerId)) {
+        String playerName = player.getName().getString();
+        if (!UserManager.isAuthenticated(playerName)) {
             double x = player.getX();
             double y = player.getY();
             double z = player.getZ();
@@ -86,9 +87,9 @@ public class LoginHandler {
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void onPlayerChat(ServerChatEvent event) {
         ServerPlayer player = event.getPlayer();
-        UUID playerId = player.getUUID();
+        String playerName = player.getName().getString();
         
-        if (!UserManager.isAuthenticated(playerId)) {
+        if (!UserManager.isAuthenticated(playerName)) {
             event.setCanceled(true);
             player.sendSystemMessage(Component.literal("§cDebes autenticarte antes de chatear"));
         }
@@ -98,8 +99,8 @@ public class LoginHandler {
     public static void onPlayerInteract(PlayerInteractEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         
-        UUID playerId = player.getUUID();
-        if (!UserManager.isAuthenticated(playerId)) {
+        String playerName = player.getName().getString();
+        if (!UserManager.isAuthenticated(playerName)) {
             event.setCanceled(true);
             player.sendSystemMessage(Component.literal("§cDebes autenticarte antes de interactuar"));
         }
@@ -109,10 +110,10 @@ public class LoginHandler {
     public static void onCommand(CommandEvent event) {
         if (!(event.getParseResults().getContext().getSource().getEntity() instanceof ServerPlayer player)) return;
         
-        UUID playerId = player.getUUID();
+        String playerName = player.getName().getString();
         String command = event.getParseResults().getReader().getString().toLowerCase();
         
-        if (!UserManager.isAuthenticated(playerId)) {
+        if (!UserManager.isAuthenticated(playerName)) {
             if (!command.startsWith("register") && !command.startsWith("login")) {
                 event.setCanceled(true);
                 player.sendSystemMessage(Component.literal("§cSolo puedes usar /register o /login"));

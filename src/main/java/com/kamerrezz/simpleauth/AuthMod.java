@@ -5,7 +5,7 @@ import com.kamerrezz.simpleauth.command.LoginCommand;
 import com.kamerrezz.simpleauth.command.RegisterCommand;
 import com.kamerrezz.simpleauth.command.UnregisterCommand;
 import com.kamerrezz.simpleauth.handler.LoginHandler;
-import com.kamerrezz.simpleauth.manager.UserManager;
+import com.kamerrezz.simpleauth.storage.UserManager;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;

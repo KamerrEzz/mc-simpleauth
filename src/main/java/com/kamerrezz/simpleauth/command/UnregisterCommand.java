@@ -1,6 +1,6 @@
 package com.kamerrezz.simpleauth.command;
 
-import com.kamerrezz.simpleauth.manager.UserManager;
+import com.kamerrezz.simpleauth.storage.UserManager;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;

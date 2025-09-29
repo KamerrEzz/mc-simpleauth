@@ -105,6 +105,11 @@ public class UserManager {
         return authenticatedPlayers.get(playerName);
     }
     
+    public static boolean isRegistered(String playerName) {
+        Map<String, UserData> users = loadUsers();
+        return users.containsKey(playerName.toLowerCase());
+    }
+    
     private static Map<String, UserData> loadUsers() {
         if (!USERS_FILE.exists()) {
             return new HashMap<>();
