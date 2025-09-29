@@ -1,4 +1,4 @@
-package com.example.simpleauth;
+package com.kamerrezz.simpleauth;
 
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
@@ -43,21 +43,21 @@ public class simpleauth
     // Create a Deferred Register to hold CreativeModeTabs which will all be registered under the "simpleauth" namespace
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
 
-    // Creates a new Block with the id "simpleauth:example_block", combining the namespace and path
-    public static final RegistryObject<Block> EXAMPLE_BLOCK = BLOCKS.register("example_block", () -> new Block(BlockBehaviour.Properties.of().mapColor(MapColor.STONE)));
-    // Creates a new BlockItem with the id "simpleauth:example_block", combining the namespace and path
-    public static final RegistryObject<Item> EXAMPLE_BLOCK_ITEM = ITEMS.register("example_block", () -> new BlockItem(EXAMPLE_BLOCK.get(), new Item.Properties()));
+    // Creates a new Block with the id "simpleauth:kamerrezz_block", combining the namespace and path
+    public static final RegistryObject<Block> kamerrezz_BLOCK = BLOCKS.register("kamerrezz_block", () -> new Block(BlockBehaviour.Properties.of().mapColor(MapColor.STONE)));
+    // Creates a new BlockItem with the id "simpleauth:kamerrezz_block", combining the namespace and path
+    public static final RegistryObject<Item> kamerrezz_BLOCK_ITEM = ITEMS.register("kamerrezz_block", () -> new BlockItem(kamerrezz_BLOCK.get(), new Item.Properties()));
 
-    // Creates a new food item with the id "simpleauth:example_id", nutrition 1 and saturation 2
-    public static final RegistryObject<Item> EXAMPLE_ITEM = ITEMS.register("example_item", () -> new Item(new Item.Properties().food(new FoodProperties.Builder()
+    // Creates a new food item with the id "simpleauth:kamerrezz_id", nutrition 1 and saturation 2
+    public static final RegistryObject<Item> kamerrezz_ITEM = ITEMS.register("kamerrezz_item", () -> new Item(new Item.Properties().food(new FoodProperties.Builder()
             .alwaysEat().nutrition(1).saturationMod(2f).build())));
 
-    // Creates a creative tab with the id "simpleauth:example_tab" for the example item, that is placed after the combat tab
-    public static final RegistryObject<CreativeModeTab> EXAMPLE_TAB = CREATIVE_MODE_TABS.register("example_tab", () -> CreativeModeTab.builder()
+    // Creates a creative tab with the id "simpleauth:kamerrezz_tab" for the kamerrezz item, that is placed after the combat tab
+    public static final RegistryObject<CreativeModeTab> kamerrezz_TAB = CREATIVE_MODE_TABS.register("kamerrezz_tab", () -> CreativeModeTab.builder()
             .withTabsBefore(CreativeModeTabs.COMBAT)
-            .icon(() -> EXAMPLE_ITEM.get().getDefaultInstance())
+            .icon(() -> kamerrezz_ITEM.get().getDefaultInstance())
             .displayItems((parameters, output) -> {
-                output.accept(EXAMPLE_ITEM.get()); // Add the example item to the tab. For your own tabs, this method is preferred over the event
+                output.accept(kamerrezz_ITEM.get()); // Add the kamerrezz item to the tab. For your own tabs, this method is preferred over the event
             }).build());
 
     public simpleauth(FMLJavaModLoadingContext context)
@@ -97,11 +97,11 @@ public class simpleauth
         Config.items.forEach((item) -> LOGGER.info("ITEM >> {}", item.toString()));
     }
 
-    // Add the example block item to the building blocks tab
+    // Add the kamerrezz block item to the building blocks tab
     private void addCreative(BuildCreativeModeTabContentsEvent event)
     {
         if (event.getTabKey() == CreativeModeTabs.BUILDING_BLOCKS)
-            event.accept(EXAMPLE_BLOCK_ITEM);
+            event.accept(kamerrezz_BLOCK_ITEM);
     }
 
     // You can use SubscribeEvent and let the Event Bus discover methods to call
