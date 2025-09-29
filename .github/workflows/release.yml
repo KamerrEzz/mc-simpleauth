@@ -1,0 +1,120 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Triggers on version tags like v1.0.0, v1.2.3, etc.
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        
+    - name: Cache Gradle packages
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+          
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+      
+    - name: Build with Gradle
+      run: ./gradlew build
+      
+    - name: Get version from tag
+      id: get_version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+      
+    - name: Extract changelog for version
+      id: changelog
+      run: |
+        VERSION="${{ steps.get_version.outputs.VERSION }}"
+        VERSION_NUMBER="${VERSION#v}"  # Remove 'v' prefix
+        
+        # Extract changelog section for this version from CHANGELOG.md
+        if [ -f "CHANGELOG.md" ]; then
+          # Find the section for this version and extract until next version or end
+          CHANGELOG_CONTENT=$(awk -v version="$VERSION_NUMBER" '
+            /^## \[/ { 
+              if (found) exit
+              if ($0 ~ "\\[" version "\\]") found=1
+              next
+            }
+            found && /^## \[/ { exit }
+            found { print }
+          ' CHANGELOG.md)
+          
+          # If no specific version found, use "Sin Lanzar" section
+          if [ -z "$CHANGELOG_CONTENT" ]; then
+            CHANGELOG_CONTENT=$(awk '
+              /^## \[Sin Lanzar\]/ { found=1; next }
+              found && /^## \[/ { exit }
+              found { print }
+            ' CHANGELOG.md)
+          fi
+          
+          # If still empty, provide default content
+          if [ -z "$CHANGELOG_CONTENT" ]; then
+            CHANGELOG_CONTENT="### ✨ Nuevas Características
+- Mejoras en el sistema de autenticación
+- Optimizaciones de rendimiento
+
+### 🐛 Correcciones  
+- Corrección de bugs menores
+
+### 📋 Información Técnica
+- **Minecraft**: 1.20.1
+- **Forge**: 47.4.9+
+- **Java**: 17+"
+          fi
+        else
+          # Fallback if CHANGELOG.md doesn't exist
+          CHANGELOG_CONTENT="### ✨ Nuevas Características
+- Mejoras en el sistema de autenticación
+- Optimizaciones de rendimiento
+
+### 🐛 Correcciones
+- Corrección de bugs menores
+
+### 📋 Información Técnica
+- **Minecraft**: 1.20.1
+- **Forge**: 47.4.9+
+- **Java**: 17+"
+        fi
+        
+        # Output the changelog
+        echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+        echo "## 🚀 SimpleAuth $VERSION" >> $GITHUB_OUTPUT
+        echo "" >> $GITHUB_OUTPUT
+        echo "$CHANGELOG_CONTENT" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+        
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ steps.get_version.outputs.VERSION }}
+        name: SimpleAuth ${{ steps.get_version.outputs.VERSION }}
+        body: ${{ steps.changelog.outputs.CHANGELOG }}
+        draft: false
+        prerelease: false
+        files: |
+          build/libs/*.jar
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
