@@ -7,6 +7,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.CommandEvent;
 import net.minecraftforge.event.ServerChatEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
@@ -107,8 +108,9 @@ public class LoginHandler {
         
         String playerName = player.getName().getString();
         if (!UserManager.isAuthenticated(playerName)) {
-            event.setCanceled(true);
+            // No podemos cancelar LivingJumpEvent, solo resetear el movimiento
             player.setDeltaMovement(0, 0, 0);
+            player.hasImpulse = false;
         }
     }
     
@@ -170,6 +172,19 @@ public class LoginHandler {
         if (!UserManager.isAuthenticated(playerName)) {
             event.setCanceled(true);
             event.getPlayer().sendSystemMessage(Component.literal("Debes autenticarte antes de poder chatear."));
+        }
+    }
+    
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void onPlayerHurt(LivingHurtEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+        
+        String playerName = player.getName().getString();
+        
+        // Si el jugador no está autenticado, cancelar todo el daño
+        if (!UserManager.isAuthenticated(playerName)) {
+            event.setCanceled(true);
+            player.sendSystemMessage(Component.literal("§eEres inmortal hasta que te autentiques"));
         }
     }
     
