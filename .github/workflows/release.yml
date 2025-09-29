@@ -75,7 +75,7 @@ jobs:
 - Mejoras en el sistema de autenticación
 - Optimizaciones de rendimiento
 
-### 🐛 Correcciones  
+### 🐛 Correcciones
 - Corrección de bugs menores
 
 ### 📋 Información Técnica
@@ -88,6 +88,14 @@ jobs:
           CHANGELOG_CONTENT="### ✨ Nuevas Características
 - Mejoras en el sistema de autenticación
 - Optimizaciones de rendimiento
+
+### 🐛 Correcciones
+- Corrección de bugs menores
+
+### 📋 Información Técnica
+- **Minecraft**: 1.20.1
+- **Forge**: 47.4.9+
+- **Java**: 17+"
 
 ### 🐛 Correcciones
 - Corrección de bugs menores
