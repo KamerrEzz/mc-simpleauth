@@ -1,114 +1,146 @@
 package com.kamerrezz.simpleauth.storage;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+import com.kamerrezz.simpleauth.util.PasswordUtils;
+import net.minecraftforge.fml.loading.FMLPaths;
+
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.lang.reflect.Type;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Gestor de usuarios y datos de autenticación
- * Maneja el almacenamiento y recuperación de información de usuarios
- */
 public class UserManager {
+    private static final Map<String, UUID> authenticatedPlayers = new ConcurrentHashMap<>();
+    private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    private static final Path CONFIG_DIR = FMLPaths.CONFIGDIR.get().resolve("simpleauth");
+    private static final File USERS_FILE = CONFIG_DIR.resolve("users.json").toFile();
     
-    // Almacenamiento en memoria (temporal)
-    // TODO: Implementar persistencia en archivo JSON o base de datos
-    private static final Map<String, UserData> registeredUsers = new HashMap<>();
-    private static final Set<String> authenticatedPlayers = new java.util.HashSet<>();
+    static {
+        try {
+            Files.createDirectories(CONFIG_DIR);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to create config directory", e);
+        }
+    }
     
-    /**
-     * Registra un nuevo usuario en el sistema
-     */
-    public static boolean registerUser(String playerName, UUID playerUUID, String hashedPassword) {
-        // TODO: Verificar que el usuario no exista
-        // TODO: Crear UserData y almacenar
-        // TODO: Persistir datos en archivo
+    public static boolean registerUser(String playerName, String password, String ip) {
+        Map<String, UserData> users = loadUsers();
         
-        if (registeredUsers.containsKey(playerName.toLowerCase())) {
-            return false; // Usuario ya existe
+        if (users.containsKey(playerName.toLowerCase())) {
+            return false;
         }
         
-        UserData userData = new UserData(playerName, playerUUID, hashedPassword);
-        registeredUsers.put(playerName.toLowerCase(), userData);
+        UUID internalUuid = UUID.randomUUID();
+        String passwordHash = PasswordUtils.hashPassword(password);
         
-        return true;
+        UserData userData = new UserData(playerName, internalUuid, passwordHash, ip);
+        users.put(playerName.toLowerCase(), userData);
+        
+        return saveUsers(users);
     }
     
-    /**
-     * Verifica si un usuario está registrado
-     */
-    public static boolean isUserRegistered(String playerName) {
-        return registeredUsers.containsKey(playerName.toLowerCase());
+    public static boolean verifyCredentials(String playerName, String password) {
+        Map<String, UserData> users = loadUsers();
+        UserData userData = users.get(playerName.toLowerCase());
+        
+        if (userData == null) {
+            return false;
+        }
+        
+        return PasswordUtils.verifyPassword(password, userData.passwordHash);
     }
     
-    /**
-     * Obtiene los datos de un usuario registrado
-     */
     public static UserData getUserData(String playerName) {
-        return registeredUsers.get(playerName.toLowerCase());
+        Map<String, UserData> users = loadUsers();
+        return users.get(playerName.toLowerCase());
     }
     
-    /**
-     * Marca un jugador como autenticado
-     */
-    public static void setPlayerAuthenticated(String playerName, boolean authenticated) {
-        if (authenticated) {
-            authenticatedPlayers.add(playerName.toLowerCase());
-        } else {
-            authenticatedPlayers.remove(playerName.toLowerCase());
+    public static boolean changePassword(String playerName, String newPassword) {
+        Map<String, UserData> users = loadUsers();
+        UserData userData = users.get(playerName.toLowerCase());
+        
+        if (userData == null) {
+            return false;
+        }
+        
+        userData.passwordHash = PasswordUtils.hashPassword(newPassword);
+        users.put(playerName.toLowerCase(), userData);
+        
+        return saveUsers(users);
+    }
+    
+    public static boolean deleteUser(String playerName) {
+        Map<String, UserData> users = loadUsers();
+        UserData removed = users.remove(playerName.toLowerCase());
+        
+        if (removed == null) {
+            return false;
+        }
+        
+        return saveUsers(users);
+    }
+    
+    public static void setAuthenticated(String playerName, UUID internalUuid) {
+        authenticatedPlayers.put(playerName, internalUuid);
+    }
+    
+    public static boolean isAuthenticated(String playerName) {
+        return authenticatedPlayers.containsKey(playerName);
+    }
+    
+    public static void removeAuthenticated(String playerName) {
+        authenticatedPlayers.remove(playerName);
+    }
+    
+    public static UUID getInternalUuid(String playerName) {
+        return authenticatedPlayers.get(playerName);
+    }
+    
+    private static Map<String, UserData> loadUsers() {
+        if (!USERS_FILE.exists()) {
+            return new HashMap<>();
+        }
+        
+        try (FileReader reader = new FileReader(USERS_FILE)) {
+            Type type = new TypeToken<Map<String, UserData>>(){}.getType();
+            Map<String, UserData> users = gson.fromJson(reader, type);
+            return users != null ? users : new HashMap<>();
+        } catch (IOException e) {
+            return new HashMap<>();
         }
     }
     
-    /**
-     * Verifica si un jugador está autenticado
-     */
-    public static boolean isPlayerAuthenticated(String playerName) {
-        return authenticatedPlayers.contains(playerName.toLowerCase());
+    private static boolean saveUsers(Map<String, UserData> users) {
+        try (FileWriter writer = new FileWriter(USERS_FILE)) {
+            gson.toJson(users, writer);
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
     }
     
-    /**
-     * Limpia la autenticación de un jugador (al desconectarse)
-     */
-    public static void clearPlayerAuthentication(String playerName) {
-        authenticatedPlayers.remove(playerName.toLowerCase());
-    }
-    
-    /**
-     * Carga los datos de usuarios desde archivo
-     */
-    public static void loadUserData() {
-        // TODO: Implementar carga desde archivo JSON
-        // TODO: Manejar errores de lectura
-    }
-    
-    /**
-     * Guarda los datos de usuarios en archivo
-     */
-    public static void saveUserData() {
-        // TODO: Implementar guardado en archivo JSON
-        // TODO: Manejar errores de escritura
-    }
-    
-    /**
-     * Clase interna para almacenar datos de usuario
-     */
     public static class UserData {
-        private final String playerName;
-        private final UUID playerUUID;
-        private final String hashedPassword;
-        private final long registrationTime;
+        public String name;
+        public UUID internalUuid;
+        public String passwordHash;
+        public String lastIp;
         
-        public UserData(String playerName, UUID playerUUID, String hashedPassword) {
-            this.playerName = playerName;
-            this.playerUUID = playerUUID;
-            this.hashedPassword = hashedPassword;
-            this.registrationTime = System.currentTimeMillis();
+        public UserData() {}
+        
+        public UserData(String name, UUID internalUuid, String passwordHash, String lastIp) {
+            this.name = name;
+            this.internalUuid = internalUuid;
+            this.passwordHash = passwordHash;
+            this.lastIp = lastIp;
         }
-        
-        // Getters
-        public String getPlayerName() { return playerName; }
-        public UUID getPlayerUUID() { return playerUUID; }
-        public String getHashedPassword() { return hashedPassword; }
-        public long getRegistrationTime() { return registrationTime; }
     }
 }
