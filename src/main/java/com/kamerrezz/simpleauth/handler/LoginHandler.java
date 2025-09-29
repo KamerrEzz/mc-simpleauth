@@ -64,23 +64,51 @@ public class LoginHandler {
         loginAttempts.remove(playerId);
         failedAttempts.remove(playerId);
         cooldowns.remove(playerId);
+        spawnPositions.remove(playerId); 
         UserManager.removeAuthenticated(playerName);
     }
+    
+    private static final Map<UUID, double[]> spawnPositions = new ConcurrentHashMap<>();
     
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void onPlayerMove(LivingEvent.LivingTickEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         
         String playerName = player.getName().getString();
+        UUID playerId = player.getUUID();
+        
         if (!UserManager.isAuthenticated(playerName)) {
-            double x = player.getX();
-            double y = player.getY();
-            double z = player.getZ();
-            
-            if (player.getDeltaMovement().lengthSqr() > 0.01) {
-                player.teleportTo(x, y, z);
-                player.setDeltaMovement(0, 0, 0);
+            if (!spawnPositions.containsKey(playerId)) {
+                spawnPositions.put(playerId, new double[]{player.getX(), player.getY(), player.getZ()});
             }
+            
+            double[] spawnPos = spawnPositions.get(playerId);
+            
+            double distance = Math.sqrt(
+                Math.pow(player.getX() - spawnPos[0], 2) + 
+                Math.pow(player.getZ() - spawnPos[2], 2)
+            );
+            
+            if (distance > 0.1) {
+                player.teleportTo(spawnPos[0], spawnPos[1], spawnPos[2]);
+                player.setDeltaMovement(0, 0, 0);
+                player.hasImpulse = false;
+                player.sendSystemMessage(Component.literal("§cDebes autenticarte antes de moverte"));
+            }
+        } else {
+            // Limpiar posición guardada cuando se autentica
+            spawnPositions.remove(playerId);
+        }
+    }
+    
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void onPlayerJump(LivingEvent.LivingJumpEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+        
+        String playerName = player.getName().getString();
+        if (!UserManager.isAuthenticated(playerName)) {
+            event.setCanceled(true);
+            player.setDeltaMovement(0, 0, 0);
         }
     }
     
@@ -103,6 +131,17 @@ public class LoginHandler {
         if (!UserManager.isAuthenticated(playerName)) {
             event.setCanceled(true);
             player.sendSystemMessage(Component.literal("§cDebes autenticarte antes de interactuar"));
+        }
+    }
+    
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void onPlayerRightClickEmpty(PlayerInteractEvent.RightClickEmpty event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+        
+        String playerName = player.getName().getString();
+        if (!UserManager.isAuthenticated(playerName)) {
+            event.setCanceled(true);
+            player.sendSystemMessage(Component.literal("§cDebes autenticarte antes de abrir el inventario"));
         }
     }
     
