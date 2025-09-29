@@ -1,37 +1,36 @@
 package com.kamerrezz.simpleauth;
 
+import com.kamerrezz.simpleauth.command.ChangePasswordCommand;
+import com.kamerrezz.simpleauth.command.LoginCommand;
+import com.kamerrezz.simpleauth.command.RegisterCommand;
+import com.kamerrezz.simpleauth.command.UnregisterCommand;
+import com.kamerrezz.simpleauth.handler.LoginHandler;
+import com.kamerrezz.simpleauth.manager.UserManager;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
-/**
- * Clase principal del mod SimpleAuth
- * Maneja la inicialización y configuración básica del mod de autenticación
- */
 @Mod("simpleauth")
 public class AuthMod {
     
-    public static final String MOD_ID = "simpleauth";
-    public static final Logger LOGGER = LogManager.getLogger();
-    
     public AuthMod() {
-        // Registrar eventos de inicialización
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
-        
-        LOGGER.info("SimpleAuth mod initialized");
+        MinecraftForge.EVENT_BUS.register(this);
+        MinecraftForge.EVENT_BUS.register(LoginHandler.class);
     }
     
-    /**
-     * Configuración inicial del mod
-     * Se ejecuta durante la fase de setup común
-     */
     private void setup(final FMLCommonSetupEvent event) {
-        LOGGER.info("SimpleAuth setup phase");
-        
-        // TODO: Registrar comandos
-        // TODO: Registrar event handlers
-        // TODO: Inicializar sistema de almacenamiento
+        UserManager.initialize();
+    }
+    
+    @SubscribeEvent
+    public void onRegisterCommands(RegisterCommandsEvent event) {
+        RegisterCommand.register(event.getDispatcher());
+        LoginCommand.register(event.getDispatcher());
+        UnregisterCommand.register(event.getDispatcher());
+        ChangePasswordCommand.register(event.getDispatcher());
     }
 }
